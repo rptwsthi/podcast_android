@@ -1,5 +1,6 @@
 package com.android.podcast.Fragments
 
+import android.app.Activity
 import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,11 +13,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import com.android.podcast.Database.DataSource
 import com.android.podcast.MainActivity
+import com.android.podcast.Models.Item
 import com.android.podcast.R
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -29,11 +36,14 @@ private const val ARG_PARAM2 = "param2"
  * Use the [CreateVideoFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class CreateVideoFragment : Fragment() {
+class CreateVideoFragment(parentId : String) : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
-
+    var parentID = parentId
+    var thumbImage : ImageView? = null
+    var selectImageBtn : Button? = null
+    var add : Button? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -48,6 +58,9 @@ class CreateVideoFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         var view:View = inflater.inflate(R.layout.fragment_create_video, container, false)
+        thumbImage = view.findViewById(R.id.image)
+        selectImageBtn = view.findViewById(R.id.selectImageBtn)
+        add = view.findViewById(R.id.add)
 
         //set listerners
         //select image
@@ -58,12 +71,41 @@ class CreateVideoFragment : Fragment() {
         })
 
         //on add button click
-        view.setOnClickListener(View.OnClickListener {
-            //validate input
-
+        view.findViewById<Button>(R.id.add).setOnClickListener(View.OnClickListener {
+            //check for validation
+            if(view.findViewById<EditText>(R.id.videoName).text ==null || view.findViewById<EditText>(R.id.videoName).text.length<1){
+                Toast.makeText(activity,"Enter Video name!", Toast.LENGTH_LONG).show()
+                return@OnClickListener
+            }
+            if(view.findViewById<EditText>(R.id.description).text ==null || view.findViewById<EditText>(R.id.description).text.length<1){
+                Toast.makeText(activity,"Enter Description!", Toast.LENGTH_LONG).show()
+                return@OnClickListener
+            }
+            if(!IS_VIDEO_SELECTED){
+                return@OnClickListener
+            }
+            addDataToDatabase(view);
         })
+
         return view;
     }
+
+    fun addDataToDatabase(view:View){
+
+        var item = Item()
+        item.id = UUID.randomUUID().toString().replace('-', 'S').toUpperCase();
+        item.name = view!!.findViewById<EditText>(R.id.videoName).text.toString()
+        item.type = "V"
+        item.parentId = parentID
+        item.description = view!!.findViewById<EditText>(R.id.description).text.toString()
+        item.filePath = path!!
+        item.updateDate = Calendar.getInstance().timeInMillis
+        var ds = DataSource(activity as MainActivity)
+        ds.open()
+        ds.saveEntity(item)
+        ds.close()
+    }
+
 
     fun checkPermission() : Boolean {
 
@@ -110,8 +152,9 @@ class CreateVideoFragment : Fragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (resultCode == RESULT_OK) {
-            if (requestCode == VIDEO_PICK_CODE) {
+             if (resultCode == Activity.RESULT_OK && requestCode == VIDEO_PICK_CODE) {
                 IS_VIDEO_SELECTED = true
+                 path = data!!.data.path
 //                val selectedImageUri: Uri = data!!.data
 //
 //                // OI FILE Manager
@@ -135,7 +178,7 @@ class CreateVideoFragment : Fragment() {
     fun getPath(uri: Uri?): String? {
         val projection =
             arrayOf(MediaStore.Video.Media.DATA)
-        val cursor: Cursor = activity!!.getContentResolver().query(uri, projection, null, null, null)
+        val cursor = activity!!.getContentResolver().query(uri, projection, null, null, null)
         return if (cursor != null) {
             // HERE YOU WILL GET A NULLPOINTER IF CURSOR IS NULL
             // THIS CAN BE, IF YOU USED OI FILE MANAGER FOR PICKING THE MEDIA
@@ -152,6 +195,7 @@ class CreateVideoFragment : Fragment() {
         private val VIDEO_PICK_CODE = 1000;
         //Permission code
         private val PERMISSION_CODE = 1001;
+        var path : String? =null
         /**
          * Use this factory method to create a new instance of
          * this fragment using the provided parameters.
@@ -161,13 +205,13 @@ class CreateVideoFragment : Fragment() {
          * @return A new instance of fragment CreateVideoFragment.
          */
         // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            CreateVideoFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+//        @JvmStatic
+//        fun newInstance(param1: String, param2: String) =
+//            CreateVideoFragment().apply {
+//                arguments = Bundle().apply {
+//                    putString(ARG_PARAM1, param1)
+//                    putString(ARG_PARAM2, param2)
+//                }
+//            }
     }
 }

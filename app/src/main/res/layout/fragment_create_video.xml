@@ -49,7 +49,7 @@
                 android:layout_height="wrap_content"/>
 
             <EditText
-                android:id="@+id/folderName"
+                android:id="@+id/videoName"
                 android:padding="10dp"
                 android:layout_weight=".6"
                 android:layout_width="0dp"

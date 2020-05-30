@@ -10,7 +10,9 @@ import android.widget.Toolbar
 import androidx.core.view.OneShotPreDrawListener.add
 import com.android.podcast.Fragments.ItemFragment
 import com.android.podcast.Fragments.TabFragment
-import com.android.podcast.Fragments.dummy.DummyContent
+import com.android.podcast.Models.Item
+
+//import com.android.podcast.Fragments.dummy.DummyContent
 
 class MainActivity : AppCompatActivity(), ItemFragment.OnListFragmentInteractionListener {
 
@@ -23,7 +25,7 @@ class MainActivity : AppCompatActivity(), ItemFragment.OnListFragmentInteraction
         setSupportActionBar(toolbar);
         setBackButton(false)
         //add Fragment
-        var frag = ItemFragment.newInstance(3);
+        var frag = ItemFragment("0");
         supportFragmentManager.beginTransaction().add(R.id.container, frag).commit()
     }
 
@@ -32,9 +34,11 @@ class MainActivity : AppCompatActivity(), ItemFragment.OnListFragmentInteraction
         supportActionBar!!.setDisplayShowHomeEnabled(show)
     }
 
-    override fun onListFragmentInteraction(item: DummyContent.DummyItem?) {
+    override fun onListFragmentInteraction(item: Item?) {
         //Log here for now
         Log.d("item","clicked")
+        //open item depending on its type
+        //F-folder V-video A-audio T-text
     }
 
     override fun onSupportNavigateUp(): Boolean {

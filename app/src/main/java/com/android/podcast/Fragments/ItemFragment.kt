@@ -8,11 +8,13 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.podcast.Database.DataSource
 import com.android.podcast.R
 
-import com.android.podcast.Fragments.dummy.DummyContent
-import com.android.podcast.Fragments.dummy.DummyContent.DummyItem
+//import com.android.podcast.Fragments.dummy.DummyContent
+//import com.android.podcast.Fragments.dummy.DummyContent.DummyItem
 import com.android.podcast.MainActivity
+import com.android.podcast.Models.Item
 import kotlinx.android.synthetic.main.activity_main.*
 
 /**
@@ -20,11 +22,11 @@ import kotlinx.android.synthetic.main.activity_main.*
  * Activities containing this fragment MUST implement the
  * [ItemFragment.OnListFragmentInteractionListener] interface.
  */
-class ItemFragment : Fragment() {
+class ItemFragment(parentId : String) : Fragment() {
 
     // TODO: Customize parameters
-    private var columnCount = 1
-
+    private var columnCount = 3
+    private var parentID =parentId
     private var listener: OnListFragmentInteractionListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,8 +52,12 @@ class ItemFragment : Fragment() {
                     columnCount <= 1 -> LinearLayoutManager(context)
                     else -> GridLayoutManager(context, columnCount)
                 }
-
-                adapter = MyMediaAdapter(DummyContent.ITEMS, listener)
+                //get data from database and pass here
+                var db = DataSource(activity as MainActivity)
+                db.open()
+                var itemList = db.getEntitiesForParent(parentID)
+                db.close()
+                adapter = MyMediaAdapter(itemList, listener)
             }
         }
         return view
@@ -67,7 +73,7 @@ class ItemFragment : Fragment() {
             R.id.add -> {
                 // newGame()
                 Log.d("item","selected")
-                activity!!.supportFragmentManager.beginTransaction().replace(R.id.container,TabFragment()).addToBackStack(null).commit()
+                activity!!.supportFragmentManager.beginTransaction().replace(R.id.container,TabFragment(parentID)).addToBackStack(null).commit()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -101,7 +107,7 @@ class ItemFragment : Fragment() {
      */
     interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
-        fun onListFragmentInteraction(item: DummyItem?)
+        fun onListFragmentInteraction(item: Item?)
     }
 
     companion object {
@@ -110,12 +116,12 @@ class ItemFragment : Fragment() {
         const val ARG_COLUMN_COUNT = "column-count"
 
         // TODO: Customize parameter initialization
-        @JvmStatic
-        fun newInstance(columnCount: Int) =
-            ItemFragment().apply {
-                arguments = Bundle().apply {
-                    putInt(ARG_COLUMN_COUNT, columnCount)
-                }
-            }
+//        @JvmStatic
+//        fun newInstance(columnCount: Int) =
+//            ItemFragment().apply {
+//                arguments = Bundle().apply {
+//                    putInt(ARG_COLUMN_COUNT, columnCount)
+//                }
+//            }
     }
 }

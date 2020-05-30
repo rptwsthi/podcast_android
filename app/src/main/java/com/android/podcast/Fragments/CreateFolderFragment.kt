@@ -3,10 +3,8 @@ package com.android.podcast.Fragments
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.media.Image
 import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,10 +13,13 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import androidx.fragment.app.Fragment
+import com.android.podcast.Database.DataSource
 import com.android.podcast.MainActivity
-
+import com.android.podcast.Models.Item
 import com.android.podcast.R
-import java.util.jar.Manifest
+import java.util.*
+import kotlin.collections.ArrayList
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -30,13 +31,14 @@ private const val ARG_PARAM2 = "param2"
  * Use the [CreateFolderFragment.newInstance] factory method to
  * create an instance of this fragment.
  */
-class CreateFolderFragment : Fragment() {
+class CreateFolderFragment(parentId : String) : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
     var thumbImage : ImageView? = null
     var selectImageBtn : Button? = null
     var add : Button? = null
+    var parentID = parentId
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,20 +77,32 @@ class CreateFolderFragment : Fragment() {
                 return@OnClickListener
             }
             if(view.findViewById<EditText>(R.id.description).text ==null || view.findViewById<EditText>(R.id.description).text.length<1){
-                Toast.makeText(activity,"Enter Folder name!", Toast.LENGTH_LONG).show()
+                Toast.makeText(activity,"Enter Description!", Toast.LENGTH_LONG).show()
                 return@OnClickListener
             }
             if(!IS_IMAGE_SELECTED){
                 return@OnClickListener
             }
-            addDataToDatabase();
+            addDataToDatabase(view);
         })
 
         return view;
     }
 
-    fun addDataToDatabase(){
+    fun addDataToDatabase(view:View){
 
+        var item = Item()
+        item.id = UUID.randomUUID().toString().replace('-', 'S').toUpperCase();
+        item.name = view!!.findViewById<EditText>(R.id.folderName).text.toString()
+        item.type = "F"
+        item.parentId = parentID
+        item.description = view!!.findViewById<EditText>(R.id.description).text.toString()
+        item.thumbImagePath = path!!
+        item.updateDate = Calendar.getInstance().timeInMillis
+        var ds = DataSource(activity as MainActivity)
+        ds.open()
+        ds.saveEntity(item)
+        ds.close()
     }
 
     fun checkPermission() : Boolean {
@@ -131,7 +145,11 @@ class CreateFolderFragment : Fragment() {
 //        super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK && requestCode == IMAGE_PICK_CODE){
             IS_IMAGE_SELECTED = true;
+
             thumbImage!!.setImageURI(data?.data)
+            path = data!!.data.path
+        }else{
+            IS_IMAGE_SELECTED = false
         }
     }
 
@@ -147,6 +165,7 @@ class CreateFolderFragment : Fragment() {
         private val IMAGE_PICK_CODE = 1000;
         //Permission code
         private val PERMISSION_CODE = 1001;
+        var path : String? =null
         /**
          * Use this factory method to create a new instance of
          * this fragment using the provided parameters.
@@ -158,7 +177,7 @@ class CreateFolderFragment : Fragment() {
         // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
-            CreateFolderFragment().apply {
+            CreateFolderFragment("0").apply {
                 arguments = Bundle().apply {
                     putString(ARG_PARAM1, param1)
                     putString(ARG_PARAM2, param2)
